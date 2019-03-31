@@ -1377,7 +1377,7 @@ void beforeSleep(struct aeEventLoop *eventLoop) {
         argv[0] = createStringObject("REPLCONF",8);
         argv[1] = createStringObject("GETACK",6);
         argv[2] = createStringObject("*",1); /* Not used argument. */
-        replicationFeedSlaves(server.slaves, server.slaveseldb, argv, 3);
+        replicationFeedSlaves(server.slaves, server.slaveseldb, argv, 3, 0);
         decrRefCount(argv[0]);
         decrRefCount(argv[1]);
         decrRefCount(argv[2]);
@@ -2313,12 +2313,12 @@ struct redisCommand *lookupCommandOrOriginal(sds name) {
  * alsoPropagate(), preventCommandPropagation(), forceCommandPropagation().
  */
 void propagate(struct redisCommand *cmd, int dbid, robj **argv, int argc,
-               int flags)
+               int flags, uint64_t cid)
 {
     if (server.aof_state != AOF_OFF && flags & PROPAGATE_AOF)
         feedAppendOnlyFile(cmd,dbid,argv,argc);
     if (flags & PROPAGATE_REPL)
-        replicationFeedSlaves(server.slaves,dbid,argv,argc);
+        replicationFeedSlaves(server.slaves,dbid,argv,argc,cid);
 }
 
 /* Used inside commands to schedule the propagation of additional commands
@@ -2334,7 +2334,7 @@ void propagate(struct redisCommand *cmd, int dbid, robj **argv, int argc,
  * stack allocated).  The function autoamtically increments ref count of
  * passed objects, so the caller does not need to. */
 void alsoPropagate(struct redisCommand *cmd, int dbid, robj **argv, int argc,
-                   int target)
+                   int target, uint64_t cid)
 {
     robj **argvcopy;
     int j;
@@ -2499,7 +2499,7 @@ void call(client *c, int flags) {
          * propagation is needed. Note that modules commands handle replication
          * in an explicit way, so we never replicate them automatically. */
         if (propagate_flags != PROPAGATE_NONE && !(c->cmd->flags & CMD_MODULE))
-            propagate(c->cmd,c->db->id,c->argv,c->argc,propagate_flags);
+            propagate(c->cmd,c->db->id,c->argv,c->argc,propagate_flags,c->id);
     }
 
     /* Restore the old replication flags, since call() can be executed
@@ -2523,7 +2523,7 @@ void call(client *c, int flags) {
                 if (!(flags&CMD_CALL_PROPAGATE_AOF)) target &= ~PROPAGATE_AOF;
                 if (!(flags&CMD_CALL_PROPAGATE_REPL)) target &= ~PROPAGATE_REPL;
                 if (target)
-                    propagate(rop->cmd,rop->dbid,rop->argv,rop->argc,target);
+                    propagate(rop->cmd,rop->dbid,rop->argv,rop->argc,target,c->id);
             }
         }
         redisOpArrayFree(&server.also_propagate);

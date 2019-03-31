@@ -636,7 +636,7 @@ int serveClientBlockedOnList(client *receiver, robj *key, robj *dstkey, redisDb 
         argv[1] = key;
         propagate((where == LIST_HEAD) ?
             server.lpopCommand : server.rpopCommand,
-            db->id,argv,2,PROPAGATE_AOF|PROPAGATE_REPL);
+            db->id,argv,2,PROPAGATE_AOF|PROPAGATE_REPL,receiver->id);
 
         /* BRPOP/BLPOP */
         addReplyMultiBulkLen(receiver,2);
@@ -659,7 +659,7 @@ int serveClientBlockedOnList(client *receiver, robj *key, robj *dstkey, redisDb 
             propagate(server.rpopCommand,
                 db->id,argv,2,
                 PROPAGATE_AOF|
-                PROPAGATE_REPL);
+                PROPAGATE_REPL,receiver->id);
             rpoplpushHandlePush(receiver,dstkey,dstobj,
                 value);
             /* Propagate the LPUSH operation. */
@@ -669,7 +669,7 @@ int serveClientBlockedOnList(client *receiver, robj *key, robj *dstkey, redisDb 
             propagate(server.lpushCommand,
                 db->id,argv,3,
                 PROPAGATE_AOF|
-                PROPAGATE_REPL);
+                PROPAGATE_REPL,receiver->id);
 
             /* Notify event ("lpush" was notified by rpoplpushHandlePush). */
             notifyKeyspaceEvent(NOTIFY_LIST,"rpop",key,receiver->db->id);

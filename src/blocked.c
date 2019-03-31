@@ -364,7 +364,7 @@ void handleClientsBlockedOnKeys(void) {
                         argv[1] = rl->key;
                         incrRefCount(rl->key);
                         propagate(cmd,receiver->db->id,
-                                  argv,2,PROPAGATE_AOF|PROPAGATE_REPL);
+                                  argv,2,PROPAGATE_AOF|PROPAGATE_REPL,receiver->id);
                         decrRefCount(argv[0]);
                         decrRefCount(argv[1]);
                     }

@@ -1485,7 +1485,7 @@ void processInputBufferAndReplicate(client *c) {
         size_t applied = c->reploff - prev_offset;
         if (applied) {
             replicationFeedSlavesFromMasterStream(server.slaves,
-                    c->pending_querybuf, applied);
+                    c->pending_querybuf, applied, c->id);
             sdsrange(c->pending_querybuf,applied,-1);
         }
     }

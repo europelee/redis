@@ -488,7 +488,7 @@ void spopWithCountCommand(client *c) {
             /* Replicate/AOF this command as an SREM operation */
             propargv[2] = objele;
             alsoPropagate(server.sremCommand,c->db->id,propargv,3,
-                PROPAGATE_AOF|PROPAGATE_REPL);
+                PROPAGATE_AOF|PROPAGATE_REPL,c->id);
             decrRefCount(objele);
         }
     } else {
@@ -531,7 +531,7 @@ void spopWithCountCommand(client *c) {
             /* Replicate/AOF this command as an SREM operation */
             propargv[2] = objele;
             alsoPropagate(server.sremCommand,c->db->id,propargv,3,
-                PROPAGATE_AOF|PROPAGATE_REPL);
+                PROPAGATE_AOF|PROPAGATE_REPL,c->id);
             decrRefCount(objele);
         }
         setTypeReleaseIterator(si);

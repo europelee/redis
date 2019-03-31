@@ -1575,8 +1575,8 @@ ssize_t syncRead(int fd, char *ptr, ssize_t size, long long timeout);
 ssize_t syncReadLine(int fd, char *ptr, ssize_t size, long long timeout);
 
 /* Replication */
-void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc);
-void replicationFeedSlavesFromMasterStream(list *slaves, char *buf, size_t buflen);
+void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc, uint64_t cid);
+void replicationFeedSlavesFromMasterStream(list *slaves, char *buf, size_t buflen, uint64_t cid);
 void replicationFeedMonitors(client *c, list *monitors, int dictid, robj **argv, int argc);
 void updateSlavesWaitingBgsave(int bgsaveerr, int type);
 void replicationCron(void);
@@ -1712,8 +1712,8 @@ struct redisCommand *lookupCommand(sds name);
 struct redisCommand *lookupCommandByCString(char *s);
 struct redisCommand *lookupCommandOrOriginal(sds name);
 void call(client *c, int flags);
-void propagate(struct redisCommand *cmd, int dbid, robj **argv, int argc, int flags);
-void alsoPropagate(struct redisCommand *cmd, int dbid, robj **argv, int argc, int target);
+void propagate(struct redisCommand *cmd, int dbid, robj **argv, int argc, int flags, uint64_t cid);
+void alsoPropagate(struct redisCommand *cmd, int dbid, robj **argv, int argc, int target, uint64_t cid);
 void forceCommandPropagation(client *c, int flags);
 void preventCommandPropagation(client *c);
 void preventCommandAOF(client *c);

@@ -505,7 +505,7 @@ void moduleHandlePropagationAfterCommandCallback(RedisModuleCtx *ctx) {
         robj *propargv[1];
         propargv[0] = createStringObject("EXEC",4);
         alsoPropagate(server.execCommand,c->db->id,propargv,1,
-            PROPAGATE_AOF|PROPAGATE_REPL);
+            PROPAGATE_AOF|PROPAGATE_REPL,c->id);
         decrRefCount(propargv[0]);
     }
 }
@@ -1324,7 +1324,7 @@ int RM_Replicate(RedisModuleCtx *ctx, const char *cmdname, const char *fmt, ...)
     /* Replicate! */
     moduleReplicateMultiIfNeeded(ctx);
     alsoPropagate(cmd,ctx->client->db->id,argv,argc,
-        PROPAGATE_AOF|PROPAGATE_REPL);
+        PROPAGATE_AOF|PROPAGATE_REPL,ctx->client->id);
 
     /* Release the argv. */
     for (j = 0; j < argc; j++) decrRefCount(argv[j]);
@@ -1347,7 +1347,7 @@ int RM_Replicate(RedisModuleCtx *ctx, const char *cmdname, const char *fmt, ...)
 int RM_ReplicateVerbatim(RedisModuleCtx *ctx) {
     alsoPropagate(ctx->client->cmd,ctx->client->db->id,
         ctx->client->argv,ctx->client->argc,
-        PROPAGATE_AOF|PROPAGATE_REPL);
+        PROPAGATE_AOF|PROPAGATE_REPL,ctx->client->id);
     server.dirty++;
     return REDISMODULE_OK;
 }

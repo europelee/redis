@@ -1414,7 +1414,7 @@ void evalGenericCommand(client *c, int evalsha) {
             robj *propargv[1];
             propargv[0] = createStringObject("EXEC",4);
             alsoPropagate(server.execCommand,c->db->id,propargv,1,
-                PROPAGATE_AOF|PROPAGATE_REPL);
+                PROPAGATE_AOF|PROPAGATE_REPL,c->id);
             decrRefCount(propargv[0]);
         }
     }

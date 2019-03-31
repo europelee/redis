@@ -170,7 +170,7 @@ void feedReplicationBacklogWithObject(robj *o) {
  * the commands received by our clients in order to create the replication
  * stream. Instead if the instance is a slave and has sub-slaves attached,
  * we use replicationFeedSlavesFromMaster() */
-void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc) {
+void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc, uint64_t cid) {
     listNode *ln;
     listIter li;
     int j, len;
@@ -214,6 +214,7 @@ void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc) {
         listRewind(slaves,&li);
         while((ln = listNext(&li))) {
             client *slave = ln->value;
+            if (slave->id == cid) continue;
             if (slave->replstate == SLAVE_STATE_WAIT_BGSAVE_START) continue;
             addReply(slave,selectcmd);
         }
@@ -255,6 +256,7 @@ void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc) {
     while((ln = listNext(&li))) {
         client *slave = ln->value;
 
+        if (slave->id == cid) continue;
         /* Don't feed slaves that are still waiting for BGSAVE to start */
         if (slave->replstate == SLAVE_STATE_WAIT_BGSAVE_START) continue;
 
@@ -275,7 +277,7 @@ void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc) {
 /* This function is used in order to proxy what we receive from our master
  * to our sub-slaves. */
 #include <ctype.h>
-void replicationFeedSlavesFromMasterStream(list *slaves, char *buf, size_t buflen) {
+void replicationFeedSlavesFromMasterStream(list *slaves, char *buf, size_t buflen, uint64_t cid) {
     listNode *ln;
     listIter li;
 
@@ -293,6 +295,8 @@ void replicationFeedSlavesFromMasterStream(list *slaves, char *buf, size_t bufle
     listRewind(slaves,&li);
     while((ln = listNext(&li))) {
         client *slave = ln->value;
+
+        if (slave->id == cid) continue;
 
         /* Don't feed slaves that are still waiting for BGSAVE to start */
         if (slave->replstate == SLAVE_STATE_WAIT_BGSAVE_START) continue;
@@ -2585,7 +2589,7 @@ void replicationCron(void) {
     {
         ping_argv[0] = createStringObject("PING",4);
         replicationFeedSlaves(server.slaves, server.slaveseldb,
-            ping_argv, 1);
+            ping_argv, 1, 0);
         decrRefCount(ping_argv[0]);
     }
 
